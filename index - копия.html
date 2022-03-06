@@ -8,20 +8,18 @@
     <title>Notifications with Backbone.js</title>    
 </head>
 <body>
-    <!-- ========= -->
-    <!-- HTML -->
-    <!-- ========= -->
+    <!-- ========== -->
+        <!-- HTML -->
+    <!-- ========== -->
     <section id="header">
         <ul id="header__menu">
             <li class="menu-item"><a href="#">Logo</a></li>
-            <li class="menu-item notifications">
+            <li class="menu-item notifies">
                 <div class="notifies-menu">
                     <img src="./assets/bell.png" alt="notifications bell" id="notifyBell">
-                    <div id="newNotifications" class="qty__text">newNotifications...</div>
+                    <div id="newNotifies" class="qty__text">newNotifies...</div>
                 </div>
-                <ul id="notifies-popup">
-                    <!-- <li class="notify-item"></li>        -->
-                </ul>
+                <ul id="notifies-list"></ul>
             </li>
             <li class="menu-item">User's name</li>
         </ul>
@@ -30,9 +28,9 @@
     <!-- ========= -->
     <!-- Templates -->
     <!-- ========= -->
+
         <script type="text/template" id="notify-template">
             <div class="view">
-                <!-- <input class="toggle" type="radio" <%= completed ? 'checked' : '' %> > -->
                 <h4><%- title %></h4>
                 <p><%- notify %></p>
                 <button class="destroy">read/remove</button>
@@ -57,74 +55,107 @@
     // ---------------
     // -- Models--
     // ---------------
+    let Notify = Backbone.Model.extend({
+        defaults: {
+            "unread" : true,
 
-        app.Notify = Backbone.Model.extend({
-            defaults: {
-                title: '',
-                text: '',
-                read: false,
-            },
-        });
-
+        },
+        
+    });
+      
+    
     // -- Collections --
 
-        app.NotifiesList = Backbone.Collection.extend({
-            model: app.Notify,
-            localStorage: new Store("backbone-notifies")
+        let Notifies = Backbone.Collection.extend({
+            model: Notify,
+            localStorage: new Store("backbone-notifies"),
+            unread: function(){
+                return this.where({unread: true})
+            }
         });
 
-        // instance of the Collection
-        app.notifiesList = new app.NotifiesList();
+    // instance of the Collection
+    let notifies = new Notifies();
 
+    
+    let templates = [
+            {title : "sender 3", notify: "text 2"},
+            {title : "sender 1", notify: "text 1"},
+            {title : "sender 3", notify: "text 3"},
+            {title : "sender 3", notify: "text 4"},
+            {title : "sender 2", notify: "text 5"},
+            {title : "sender 2", notify: "text 6"},
+            {title : "sender 1", notify: "text 7"},
+            {title : "sender 1", notify: "text 8"},
+            {title : "sender 4", notify: "text 9"},
+            {title : "sender 5", notify: "text 10"},
+    ];
+        notifies.add(templates[Math.floor(Math.random()*10)])
+        notifies.add(templates[Math.floor(Math.random()*10)])
+        
+        
+        // notifies.add(templates[Math.floor(Math.random()*10)])
+        // notifies.fetch({remove: false})
+        
+
+        
     // --------------
     //  -- Views --
     // --------------
         
-        let qty = 12;
-      
-        // renders quantity of new notifications
+    
 
-        let NotifiesQtyView = Backbone.View.extend({
-            el : $('#newNotifications'),
-            //  template which has the NewNotifies number to be substitute later
-            template: _.template("<p> <%= qty %> </p>"),
-            initialize: function(){
-                this.render();
-            },
-            render: function(){
-                // render the function using substituting the variable 'number' for newNotifications
-                this.$el.html(this.template({qty : qty }));
-            }
-        })              
-        let notifiesQtyView = new NotifiesQtyView();
+    let NotifyView = Backbone.View.extend({
+        tagName: "li",      
         
-
-        // renders pop-up menu on toggling bell
-
-
-        // renders individual notify item (li)
-
-        app.NotifyView = Backbone.View.extend({
-            tagName: "li",
-            template: _.template($('#notify-template').html()),
-
-            initialize: function(){
-                this.render();
-            },
-            render: function(){
-                this.$el.html(this.template(this.model.toJSON()));
-                // this.ul = this.$('#notifies-popup');
-                this.button = this.$('.destroy');
-                return this;
-            },
-            events: {
-                
-            }
+        template: _.template($('#notify-template').html()),
+        render: function(){
+            this.$el.html((this.template(this.model.toJSON())));
             
-        })
+            return this;
+        },
 
-
+        // events: {
+        //     "click.destroy" : "destroyRead"
+        // },
+        // destroyRead: function(){
+        //     console.log('delete button clicked');
+            
+        // }
         
+    });
+    
+    let NotifiesView = Backbone.View.extend({
+        el: "#header",
+        render: function(){
+            let self = this;
+            this.model.each(function(notify){
+                let notifyView = new NotifyView( {model: notify} );
+                self.$el.append(notifyView.render().$el)
+            });
+            this.img = $('#notifyBell');
+            return this;
+        },
+
+        initialize: function(){   
+            this.model.on('change', this.render, this );
+        },
+
+        events: {
+            'dblclick #notifyBell' : 'toggleNotifies', 
+        },
+        toggleNotifies: function(){
+            console.log('bell clicked');
+        }
+    });
+    let tgl=true
+
+    let notifiesView = new NotifiesView({ el: "#notifies-list", model: notifies });
+    
+    notifiesView.render();
+
+
+    // renders individual notify item (li) 
 
         
 </script>
