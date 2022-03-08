@@ -18,27 +18,32 @@
                 <div class="notifies-menu">
                     <img src="./assets/bell.png" alt="notifications bell" id="notifyBell">
                     <div id="newNotifies" class="qty__text">newNotifies...</div>
+                    <button id="btn">btn</button>
                 </div>
-                <ul id="notifies-list"></ul>
+                <ul id="notifies-list" class="hide"></ul>
             </li>
             <li class="menu-item">User's name</li>
         </ul>
+        
     </section>
+    <section class="main__section"></section>
     
     <!-- ========= -->
     <!-- Templates -->
     <!-- ========= -->
 
         <script type="text/template" id="notify-template">
-            <div class="view">
+            <div class="view" >
                 <h4><%- title %></h4>
                 <p><%- notify %></p>
+                <p><%- unread %></p>
                 <button class="destroy">read/remove</button>
             </div>
         </script> 
     <!-- ========= -->
     <!-- Libraries -->
     <!-- ========= -->
+
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.3.3/underscore-min.js" type="text/javascript"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/backbone.js/0.9.2/backbone-min.js" type="text/javascript"></script>
@@ -47,7 +52,7 @@
     <!-- =============== -->
     <!-- Javascript code --> 
     <!-- =============== -->
-<script type="text/javascript">
+    <script type="text/javascript">
         // your JS code goes here
         'use strict';
 
@@ -55,24 +60,27 @@
     // ---------------
     // -- Models--
     // ---------------
-    let Notify = Backbone.Model.extend({
+    const Notify = Backbone.Model.extend({
         defaults: {
-            "unread" : true,
-
+            title: '',
+            message: '',
+            unread : true,
         },
-        
+        toggle: function(){
+            this.save({unread : !this.get('unread')});
+        }
     });
       
     
     // -- Collections --
 
-        let Notifies = Backbone.Collection.extend({
-            model: Notify,
-            localStorage: new Store("backbone-notifies"),
-            unread: function(){
-                return this.where({unread: true})
-            }
-        });
+    const Notifies = Backbone.Collection.extend({
+        model: Notify,
+        localStorage: new Store("backbone-notifies"),
+        unread: function(){
+            return this.where({unread: true})
+        }, 
+    });
 
     // instance of the Collection
     let notifies = new Notifies();
@@ -90,75 +98,127 @@
             {title : "sender 4", notify: "text 9"},
             {title : "sender 5", notify: "text 10"},
     ];
-        notifies.add(templates[Math.floor(Math.random()*10)])
-        notifies.add(templates[Math.floor(Math.random()*10)])
+    
+    (function(){
+        notifies.add(templates[Math.floor(Math.random()*10)]);
+        notifies.add(templates[Math.floor(Math.random()*10)]);
+        console.log(notifies.length);
         
         
-        // notifies.add(templates[Math.floor(Math.random()*10)])
-        // notifies.fetch({remove: false})
-        
-
+        setTimeout(() => { 
+            notifies.add(templates[Math.floor(Math.random()*10)]);
+            console.log("#### notify has added ", notifies.at(notifies.length-1), "#### notifies length: ", notifies.length)
+            
+        }, 5000);
+}())
+    
+      
+       
         
     // --------------
     //  -- Views --
-    // --------------
-        
-    
+    // --------------   
 
+    // -- renders individual notify
     let NotifyView = Backbone.View.extend({
         tagName: "li",      
-        
         template: _.template($('#notify-template').html()),
         render: function(){
             this.$el.html((this.template(this.model.toJSON())));
-            
             return this;
         },
-
-        // events: {
-        //     "click.destroy" : "destroyRead"
-        // },
-        // destroyRead: function(){
-        //     console.log('delete button clicked');
-            
-        // }
-        
+        initialize: function(){
+            this.model.on('change', this.render, this);
+            this.model.on('destroy', this.remove, this);
+        },
+        events: {
+            'click .toggle' : 'toggleRead',
+            'click .destroy' : 'destroy',
+        },
+        toggleRead: function(){
+            this.model.toggle();
+        },
+        destroy: function(){
+            this.model.destroy();
+        }
+               
     });
-    
-    let NotifiesView = Backbone.View.extend({
-        el: "#header",
+
+    let ListView = Backbone.View.extend({
+        
         render: function(){
             let self = this;
             this.model.each(function(notify){
                 let notifyView = new NotifyView( {model: notify} );
                 self.$el.append(notifyView.render().$el)
             });
-            this.img = $('#notifyBell');
             return this;
         },
-
-        initialize: function(){   
-            this.model.on('change', this.render, this );
-        },
-
+        
         events: {
-            'dblclick #notifyBell' : 'toggleNotifies', 
+            // 'click #notifyBell' : 'toggleNotifies', 
         },
+
+        initialize: function(){
+            this.on('change', this.render, this);
+            this.render();
+            // notifies.fetch();
+            
+        },
+
+       
+    });   
+
+    let NotifiesView = Backbone.View.extend({
+
+        initialize: function(){
+            this.render();
+            console.log('#### notifies view initialized')
+        //     notifies.fetch();
+            this.on('change', function(){
+                console.log('#### notifies changed')
+            })
+            
+        },
+        
+        events: { 
+            'click #notifyBell' : 'toggleNotifies', 
+        },
+        
         toggleNotifies: function(){
             console.log('bell clicked');
-        }
-    });
-    let tgl=true
+            tgl=!tgl;
+            if (tgl){
+                $('#notifies-list').removeClass('hide');
+            } else  $('#notifies-list').addClass('hide');
+        },
+        render: function(){
+            this.$('#newNotifies').html(notifies.where({unread: true}).length);
+            return this;
+        },
+        show: function(){
+           $('#btn').html(notifies.where({unread: true}).length);
+        },
 
-    let notifiesView = new NotifiesView({ el: "#notifies-list", model: notifies });
+    });
+    $('#btn').live('click', function(){
+        console.log("### btn clicked");
+        notifiesView.show();
+    })
+    let tgl=false;
+    let test=0;
+
+    let listView = new ListView({ el: "#notifies-list", model: notifies });
+    let notifiesView = new NotifiesView({ el: ".notifies" });
     
-    notifiesView.render();
+    listView.render();
 
 
     // renders individual notify item (li) 
 
         
 </script>
+<!-- <script src="./app.js"></script> -->
     
-  </body>
-  </html>
+</body>
+</html>
