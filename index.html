@@ -98,9 +98,7 @@
             {title : "sender 4", notify: "text 9"},
             {title : "sender 5", notify: "text 10"},
     ];
-    
-
-          
+           
     // --------------
     //  -- Views --
     // --------------   
@@ -110,10 +108,9 @@
     const NotifyView = Backbone.View.extend({
         tagName: "li",      
         template: _.template($('#notify-template').html()),
-        initialize: function(){
-            this.listenTo(this.model, 'change', this.render);
+
+        initialize: function(){ 
             this.listenTo(this.model, 'destroy', this.remove);
-            
         },
         render: function(){
             this.$el.html(this.template(this.model.toJSON()));
@@ -125,8 +122,8 @@
         
         destroy: function(){
             this.model.destroy();
-        }
-               
+        },
+                       
     });
 
     const NotifyListView = Backbone.View.extend({
@@ -139,6 +136,7 @@
             });
             return this;
         },
+
         initialize : function(){
             this.listenTo(notifies, 'add', this.refresh);
             
@@ -147,7 +145,7 @@
            console.log('#### refresh'); 
            $('#notifies-list').html('');
            this.render();
-       },
+        },
     
     });   
 
@@ -176,7 +174,7 @@
             if (tgl){
                 $('#notifies-list').removeClass('hide');
             } else  $('#notifies-list').addClass('hide');
-            this.render;
+            this.render();
         },
 
         
@@ -190,10 +188,7 @@
     let notifiesView = new NotifiesView({ el: "#header" });
     let notifyListView = new NotifyListView({ el: "#notifies-list", model: notifies });
 
-    
- 
-
-    
+        
     notifies.create(templates[Math.floor(Math.random()*10)]);
     notifies.create(templates[Math.floor(Math.random()*10)]);
     for(let i=3000; i<=10000; i+=1000){
@@ -204,7 +199,6 @@
         
     }  
     
-    console.log(notifies.length);
     
     notifyListView.render();
 
