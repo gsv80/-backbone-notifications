@@ -73,22 +73,13 @@ body{
     align-items: center;
 }
 
-#todoapp ul {
-    list-style-type: none;
-    }
-    
-    .hide {
-      display: none; /* Hides pop-up */
-    }
-    
-    #todo-list .editing label {
-      display: none; /* Hides label text when .editing*/
-    }
-    #todo-list .editing input.edit {
-      display: inline; /* Shows input text box when .editing*/
-    }  
-    .main__section{
-        height: 85vh;
-        background-color: rgb(223, 223, 223); 
-        z-index: 100;       
-    }
+.hide {
+    display: none; /* Hides pop-up */
+}
+
+
+.main__section{
+    height: 85vh;
+    background-color: rgb(223, 223, 223); 
+    z-index: 100;       
+}
